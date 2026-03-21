@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&family=Public+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+
+* {
+  box-sizing: border-box;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  
+  background: #332b9d;
+  overflow-x: hidden;
+}
+
+.app {
+  width: 100%;
+  min-height: calc(100vh - var(--navbar-height));
+  background: #332b9d;
+  padding: 1.5rem;
+  margin-top: 0; /* no fixed offset needed when navbar is sticky */
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.left-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 2rem;
+}
+
+.right-section {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+h1{
+  color: #fff;
+  font-size: 48px;
+  font-weight: 800;
+}
+
+label{
+  color: #c6d2ff;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.buttonOrganizer{
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.buttonOrganizer button{
+  width: 14vw;
+  height: 8vh;
+  padding: 0.55rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.4s ease-in-out;
+  border-radius: 0.35rem;
+}
+
+#startButton{
+  
+  border: none;
+  
+  background: #ffffffe6;
+  color: #322b97;
+  
+}
+
+#simulateButton{
+  background: #372aac;
+  border: 1px solid #4f39f6;
+  color: #fff;
+}
