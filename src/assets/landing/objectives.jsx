@@ -6,7 +6,7 @@ import hatIcon from '../img/icons/hat.svg'
 function Objectives() {
     return (
         <>
-            <div className="objectives" style={{ width: "100vw", height: "100vh", background:"#f0f0f0", display:"flex", flexDirection:"column", alignItems:"center", paddingTop:"10vh"}}>
+            <div className="objectives" style={{ width: "100vw", height: "100vh", background:"#f9fafb", display:"flex", flexDirection:"column", alignItems:"center", paddingTop:"10vh"}}>
                 <h1 style={{color: "#101828"}}>Nossos Objetivos</h1>
                 <label style={{color:"#4a5565", fontWeight:"400", marginBottom:"40px"}}>Três pilares fundamentais para sua jornada rumo à prosperidade financeira</label>
                 <div className="objectivesDiv" style={{width:"95vw", height:"40vh", display: "flex", justifyContent: "space-around"}}>
