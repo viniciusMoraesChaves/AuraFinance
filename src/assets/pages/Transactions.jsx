@@ -1,17 +1,17 @@
 import Sidebar from "../components/sidebar";
 import TopBar from "../components/topBar";
 
-function DashBoard() {
+function Transactions() {
   return (
     <div style={{ display: "flex" }}>
       <Sidebar />
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <TopBar />
-        <div style={{ flex: 1, background: "#fff" }}>
+        <div style={{ flex: 1, background: "#ca2525" }}>
         </div>
       </div>
     </div>
   );
 }
 
-export default DashBoard;
+export default Transactions;
