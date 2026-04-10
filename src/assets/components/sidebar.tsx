@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import logo from '../img/aurafinance_logo.png';
 import {
   FileText,
@@ -8,13 +8,14 @@ import {
 } from "lucide-react";
 
 function Sidebar() {
-  const [active, setActive] = useState("Dashboard");
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const menu = [
-    { label: "Dashboard", icon: FileText },
-    { label: "Objetivos", icon: Target },
-    { label: "Transações", icon: ArrowLeftRight },
-    { label: "Investimentos", icon: TrendingUp },
+    { label: "Dashboard", path: "/dashboard", icon: FileText },
+    { label: "Objetivos", path: "/objectives", icon: Target },
+    { label: "Transações", path: "/transactions", icon: ArrowLeftRight },
+    { label: "Investimentos", path: "/savings", icon: TrendingUp },
   ];
 
   return (
@@ -22,11 +23,12 @@ function Sidebar() {
       style={{
         width: "260px",
         height: "100vh",
-        background: "#f3f4f6",
+        background: "#FFFFFF",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
         padding: "20px",
+        borderRight: "1px solid #e5e7eb",
       }}
     >
       <div>
@@ -76,12 +78,12 @@ function Sidebar() {
         >
           {menu.map((item, index) => {
             const Icon = item.icon;
-            const isActive = active === item.label;
+            const isActive = location.pathname === item.path;
 
             return (
               <button
                 key={index}
-                onClick={() => setActive(item.label)}
+                onClick={() => navigate(item.path)}
                 style={{
                   display: "flex",
                   alignItems: "center",
