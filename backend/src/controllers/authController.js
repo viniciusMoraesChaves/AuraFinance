@@ -1,4 +1,6 @@
+const { json } = require('sequelize')
 const User = require('../models/User')
+const bcrypt = require('bcryptjs')
 
 module.exports = class authController {
 
@@ -23,14 +25,16 @@ module.exports = class authController {
                 return res.status(400).json({ message: 'O email é obrigatório!' })
             }
 
-            if (!user.email.includes('@')) 
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+            if (!emailRegex.test(user.email))
             {
-                return res.status(400).json({ message: 'Email inválido!' })
+                 return res.status(400).json({ message: 'Email inválido!' })
             }
 
-            if (!user.idade || user.idade <= 0) 
+            if (!user.idade || isNaN(user.idade) || Number(user.idade) <= 0)   
             {
-                return res.status(400).json({ message: 'A idade deve ser maior que 0!' })
+                return res.status(400).json({ message: 'A idade está inválida!'})
             }
 
             if (!user.senha) 
@@ -38,9 +42,9 @@ module.exports = class authController {
                 return res.status(400).json({ message: 'A senha é obrigatória!' })
             }
 
-            if (user.senha.length < 6)
+            if (user.senha.length < 8)
             {
-                return res.status(400).json({ message: 'A senha deve ter no mínimo 6 caracteres!' })
+                return res.status(400).json({ message: 'A senha deve ter no mínimo 8 caracteres!' })
             }
 
             const userExists = await User.findOne({ where: { email: user.email } })
@@ -49,6 +53,11 @@ module.exports = class authController {
             {
                 return res.status(409).json({ message: 'Este email já está cadastrado!' })
             }
+
+            const salt = await bcrypt.genSalt(12)
+            const passwordHash = await bcrypt.hash(user.senha,salt)
+
+            user.senha = passwordHash
 
             const newUser = await User.create(user)
             
@@ -63,6 +72,8 @@ module.exports = class authController {
 
         } catch (error) {
 
+            console.log(error)
+           
             return res.status(500).json({
                 message: 'Erro ao criar usuário',
                 error: error.message
