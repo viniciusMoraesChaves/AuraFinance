@@ -1,9 +1,10 @@
-const { json } = require('sequelize')
 const User = require('../models/User')
 const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 
 module.exports = class authController {
 
+    /*aqui é o cadastro*/
     static async createUser(req, res) {
 
         try {
@@ -54,6 +55,7 @@ module.exports = class authController {
                 return res.status(409).json({ message: 'Este email já está cadastrado!' })
             }
 
+            /*parte da criptografia*/
             const salt = await bcrypt.genSalt(12)
             const passwordHash = await bcrypt.hash(user.senha,salt)
 
@@ -80,4 +82,44 @@ module.exports = class authController {
             })
         }
     }
+
+    /*login*/
+    static async login(req, res) {
+  try {
+    const { email, senha } = req.body
+
+    if (!email || !senha) {
+      return res.status(400).json({ message: 'Email e senha são obrigatórios!' })
+    }
+
+    const user = await User.findOne({ where: { email } })
+
+    if (!user) {
+      return res.status(404).json({ message: 'Usuário não encontrado!' })
+    }
+
+    const senhaValida = await bcrypt.compare(senha, user.senha)
+
+    if (!senhaValida) {
+      return res.status(401).json({ message: 'Senha incorreta!' })
+    }
+
+    const token = jwt.sign(
+      { id: user.id_usuario, email: user.email },
+      'segredo', // depois a gente move isso pro .env
+      { expiresIn: '1h' }
+    )
+
+    return res.status(200).json({
+      message: 'Login realizado com sucesso!',
+      token
+    })
+
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Erro no login',
+      error: error.message
+    })
+  }
+}
 }
