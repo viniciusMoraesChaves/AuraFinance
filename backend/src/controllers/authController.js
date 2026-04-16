@@ -146,4 +146,76 @@ static async getCurrentUser(req,res) {
     }
     
 }
+static async updateUser(req, res) {
+  try {
+    const { nome, email, idade, senha } = req.body
+
+    const user = await User.findByPk(req.user.id) /*findByPk ele busca a chave primaria */
+
+    if (!user) {
+      return res.status(404).json({ message: 'Usuário não encontrado!' })
+    }
+
+    /*muda o nome*/
+    if (nome) {
+      user.nome = nome
+    }
+
+    /* muda o email por enquanto (ainda vou pesquisar para não poder alterar email)*/
+    if (email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: 'Email inválido!' })
+      }
+
+      const emailExists = await User.findOne({ where: { email } })
+
+      if (emailExists && emailExists.id_usuario !== user.id_usuario) {
+        return res.status(409).json({ message: 'Este email já está em uso!' })
+      }
+
+      user.email = email
+    }
+
+    /*muda a idade*/
+    if (idade !== undefined) {
+      if (isNaN(idade) || Number(idade) <= 0) {
+        return res.status(400).json({ message: 'A idade está inválida!' }) 
+      }
+
+      user.idade = idade
+    }
+
+    /*mudar a senha*/
+    if (senha) {
+      if (senha.length < 8) {
+        return res.status(400).json({ message: 'A senha deve ter no mínimo 8 caracteres!' })
+      }
+
+      const salt = await bcrypt.genSalt(12)
+      const passwordHash = await bcrypt.hash(senha, salt)
+      user.senha = passwordHash
+    }
+
+    await user.save()
+
+    return res.status(200).json({
+      message: 'Usuário atualizado com sucesso!',
+      user: {
+        id: user.id_usuario,
+        nome: user.nome,
+        email: user.email,
+        idade: user.idade
+      }
+    })
+
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Erro ao atualizar usuário',
+      error: error.message
+    })
+  }
+}
+
 }
