@@ -11,8 +11,8 @@ module.exports = class authController {
 
             const user = { 
                 nome: req.body.nome,
-                email: req.body.email,
-                idade: req.body.idade,
+                email: req.body.email ? req.body.email.trim().toLowerCase() : '',
+                idade: Number(req.body.idade),
                 senha: req.body.senha,
             }
 
@@ -33,7 +33,7 @@ module.exports = class authController {
                  return res.status(400).json({ message: 'Email inválido!' })
             }
 
-            if (!user.idade || isNaN(user.idade) || Number(user.idade) <= 0)   
+            if (!user.idade || isNaN(user.idade) || user.idade <= 0 || user.idade > 120)    
             {
                 return res.status(400).json({ message: 'A idade está inválida!'})
             }
@@ -86,7 +86,9 @@ module.exports = class authController {
     /*login*/
     static async login(req, res) {
   try {
-    const { email, senha } = req.body
+    
+    const email = req.body.email ? req.body.email.trim().toLowerCase() : ''
+    const { senha } = req.body
 
     if (!email || !senha) {
       return res.status(400).json({ message: 'Email e senha são obrigatórios!' })
@@ -146,6 +148,8 @@ static async getCurrentUser(req,res) {
     }
     
 }
+
+// editar as informacoes do usuario
 static async updateUser(req, res) {
   try {
     const { nome, email, idade, senha } = req.body
@@ -161,21 +165,10 @@ static async updateUser(req, res) {
       user.nome = nome
     }
 
-    /* muda o email por enquanto (ainda vou pesquisar para não poder alterar email)*/
-    if (email) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-      if (!emailRegex.test(email)) {
-        return res.status(400).json({ message: 'Email inválido!' })
-      }
-
-      const emailExists = await User.findOne({ where: { email } })
-
-      if (emailExists && emailExists.id_usuario !== user.id_usuario) {
-        return res.status(409).json({ message: 'Este email já está em uso!' })
-      }
-
-      user.email = email
+    // nao pode mudar email
+    if (email) 
+    {
+    return res.status(400).json({message: 'Não é permitido alterar o email.'})
     }
 
     /*muda a idade*/
@@ -184,7 +177,7 @@ static async updateUser(req, res) {
         return res.status(400).json({ message: 'A idade está inválida!' }) 
       }
 
-      user.idade = idade
+      user.idade = Number(idade)
     }
 
     /*mudar a senha*/
@@ -218,4 +211,36 @@ static async updateUser(req, res) {
   }
 }
 
+// apagar usuario
+static async deleteUser(req, res) {
+  try {
+    const { senha } = req.body
+
+    if (!senha) 
+    {
+      return res.status(400).json({ message: 'A senha é obrigatória!' })
+    }
+
+    const user = await User.findByPk(req.user.id) // achar o usuario no banco por meio do id
+
+    if (!user) 
+    {
+      return res.status(404).json({ message: 'Usuário não encontrado!' })
+    }
+
+    const senhaValida = await bcrypt.compare(senha, user.senha) // se achou compara a senha digitada com a salva no banco (compara criptografia)
+
+    if (!senhaValida) 
+    {
+      return res.status(401).json({ message: 'Senha incorreta!' })
+    }
+
+    await User.destroy({ where: { id_usuario: user.id_usuario } }) // deleta usuario
+
+    return res.status(200).json({ message: 'Usuário apagado com sucesso!'})
+
+  } catch (error) {
+    return res.status(500).json({message: 'Erro ao apagar usuário',error: error.message})
+  }
+}
 }
