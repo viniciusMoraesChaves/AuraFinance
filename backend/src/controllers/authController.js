@@ -106,7 +106,7 @@ module.exports = class authController {
 
     const token = jwt.sign(
       { id: user.id_usuario, email: user.email },
-      'segredo', // depois a gente move isso pro .env
+      process.env.JWT_SECRET,
       { expiresIn: '1h' }
     )
 
@@ -121,5 +121,29 @@ module.exports = class authController {
       error: error.message
     })
   }
+}
+ // aqui é a busca das informacoes do usuario
+static async getCurrentUser(req,res) {
+
+    try {
+
+        const user = await User.findByPk(req.user.id, { // funcao que busca pela PK (chave primaria (id do usuario))
+
+             attributes: ['id_usuario', 'nome', 'email', 'idade']  // informacoes que queremos retornar
+        })
+
+        if(!user)
+        {
+            return res.status(404).json({message: 'Usuário não encontrado!'}) // se nao achar o usuario
+        }
+
+        return res.status(200).json({ user }) // se achou devolvemos o usuario (mensagem de sucesso!)
+
+    } catch (error) {
+        
+        return res.status(500).json({ message: 'Erro buscar usuário', error: error.message }) // se deu algum erro na busca que nao seja que nao encontrou o usuario
+    
+    }
+    
 }
 }
