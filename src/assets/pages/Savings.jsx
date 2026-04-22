@@ -3,7 +3,7 @@ import TopBar from "../components/topBar";
 
 function Savings() {
   return (
-    <div style={{ display: "flex" }}>
+    <div style={{ display: "flex", marginLeft: "260px"}}>
       <Sidebar />
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <TopBar />
