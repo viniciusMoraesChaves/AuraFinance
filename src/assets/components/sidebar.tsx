@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import logo from '../img/aurafinance_logo.png';
+import logo from "../img/aurafinance_logo.png";
 import {
   FileText,
   Target,
@@ -29,9 +29,15 @@ function Sidebar() {
         justifyContent: "space-between",
         padding: "20px",
         borderRight: "1px solid #e5e7eb",
+
+        position: "fixed", // 👈 fixa na tela
+        top: 0,
+        left: 0,
+        zIndex: 1000, // 👈 evita problemas de sobreposição
       }}
     >
       <div>
+        {/* LOGO */}
         <div
           style={{
             height: "90px",
@@ -45,30 +51,28 @@ function Sidebar() {
           <div
             style={{
               background: "#4338ca",
-              color: "white",
               width: "42px",
               height: "42px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               borderRadius: "10px",
-              fontWeight: "bold",
             }}
           >
-            <img src={logo} alt="AF" style={{maxWidth:'60px'}}/>
+            <img src={logo} alt="AF" style={{ maxWidth: "60px" }} />
           </div>
 
           <div>
-            <h1 style={{ margin: 0, fontSize: "22px", color: "#1f2937" }}>
+            <h1 style={{ margin: 0, fontSize: "20px", color: "#1f2937" }}>
               AuraFinance
             </h1>
-            <p style={{ margin: 0, fontSize: "14px", color: "gray" }}>
+            <p style={{ margin: 0, fontSize: "13px", color: "#6b7280" }}>
               Conta Premium
             </p>
           </div>
         </div>
 
-
+        {/* MENU */}
         <div
           style={{
             display: "flex",
@@ -94,8 +98,9 @@ function Sidebar() {
                   cursor: "pointer",
                   background: isActive ? "#312c85" : "transparent",
                   color: isActive ? "white" : "#374151",
-                  transition: "all 0.3s ease",
-                  fontSize: "16px",
+                  transition: "all 0.2s ease",
+                  fontSize: "15px",
+                  textAlign: "left",
                 }}
               >
                 <Icon size={20} />
@@ -106,7 +111,10 @@ function Sidebar() {
         </div>
       </div>
 
-      
+      {/* FOOTER (opcional) */}
+      <div style={{ fontSize: "12px", color: "#9ca3af" }}>
+        © 2026 AuraFinance
+      </div>
     </div>
   );
 }
