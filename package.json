@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@splinetool/react-spline": "^4.1.0",
+    "lucide-react": "^1.8.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.13.2",
+    "recharts": "^3.8.1",
     "three": "^0.183.2"
   },
   "devDependencies": {
