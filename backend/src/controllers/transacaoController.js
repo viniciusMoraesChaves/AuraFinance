@@ -6,7 +6,6 @@ module.exports = class transacaoController {
     static async createTransacao(req, res) {
         try {
             const {
-                id_usuario,
                 id_categoria,
                 descricao,
                 status,
@@ -15,6 +14,8 @@ module.exports = class transacaoController {
                 valor,
                 entrada_saida
             } = req.body
+
+            const id_usuario = req.user.id
 
             /* os if vão retornar erro se a pessoa não digitou nada, ou se ela digitou como por ex uma letra inves de um numero na idade */
             if (!id_usuario) { 
@@ -90,4 +91,67 @@ module.exports = class transacaoController {
             })
         }
     }
+
+
+   static async listTransacao(req, res) {
+    try {
+
+        // Pegando filtros opcionais enviados pela URL
+        const { id_categoria, entrada_saida, status } = req.query
+
+        // Pegando o ID do usuário autenticado
+        // Tenta buscar como id ou id_usuario
+        const id_usuario = req.user?.id || req.user?.id_usuario
+
+        // Se não encontrou ID no token
+        if (!id_usuario) {
+            return res.status(401).json({
+                message: 'Usuário não autenticado ou token inválido!'
+            })
+        }
+
+        // Filtro principal:
+        // Sempre listar somente transações do usuário logado
+        const where = {
+            id_usuario: id_usuario
+        }
+
+        // Se vier categoria
+        if (id_categoria) {
+            where.id_categoria = id_categoria
+        }
+
+        // Se vier entrada ou saída
+        // 0 = saída
+        // 1 = entrada
+        if (entrada_saida !== undefined) {
+            where.entrada_saida = Number(entrada_saida)
+        }
+
+        // Se vier status
+        if (status) {
+            where.status = status
+        }
+
+        // Busca no banco
+        const transacoes = await Transacao.findAll({
+            where
+        })
+
+        // Retorno sucesso
+        return res.status(200).json({
+            message: 'Transações listadas com sucesso!',
+            transacoes
+        })
+
+    } catch (error) {
+
+        // Erro interno
+        return res.status(500).json({
+            message: 'Erro ao listar transações',
+            error: error.message
+        })
+
+    }
+}
 }
