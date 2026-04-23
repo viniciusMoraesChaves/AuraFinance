@@ -30,4 +30,4 @@ const Usuario = db.define('Usuario', {
   timestamps: false
 })
 
-    module.exports = Usuario
+module.exports = Usuario
