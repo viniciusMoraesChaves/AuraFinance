@@ -30,14 +30,13 @@ function Sidebar() {
         padding: "20px",
         borderRight: "1px solid #e5e7eb",
 
-        position: "fixed", // 👈 fixa na tela
+        position: "fixed",
         top: 0,
         left: 0,
-        zIndex: 1000, // 👈 evita problemas de sobreposição
+        zIndex: 1000,
       }}
     >
       <div>
-        {/* LOGO */}
         <div
           style={{
             height: "90px",
@@ -72,7 +71,6 @@ function Sidebar() {
           </div>
         </div>
 
-        {/* MENU */}
         <div
           style={{
             display: "flex",
