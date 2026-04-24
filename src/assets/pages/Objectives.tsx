@@ -27,6 +27,10 @@ function Objectives() {
       ? "Dashboard Geral"
       : currentPage === "Objetivos"
       ? "Meus Objetivos Financeiros"
+      : currentPage === "Transações"
+      ? "Entradas e Saídas"
+      : currentPage === "Investimentos"
+      ? "Investimentos"
       : currentPage;
 
   return (
