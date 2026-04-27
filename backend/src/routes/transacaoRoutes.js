@@ -7,5 +7,6 @@ const checkToken = require('../middlewares/checkToken')
 router.post('/create', checkToken, transacaoController.createTransacao)
 router.get('/list', checkToken, transacaoController.listTransacao)
 router.put('/edit/:id', checkToken, transacaoController.editTransacao)
+router.delete('/delete-transacao/:id',checkToken,transacaoController.deleteTransacao)
 
 module.exports = router

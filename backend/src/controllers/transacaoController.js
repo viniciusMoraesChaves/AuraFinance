@@ -287,5 +287,32 @@ static async editTransacao(req, res) {
         })
     }
 }
+    static async deleteTransacao(req, res) {
+    try {
+        const { id } = req.params
+
+        const id_usuario = req.user?.id || req.user?.id_usuario
+
+        const transacao = await Transacao.findOne({
+            where: {
+                id_transacao: id,
+                id_usuario: id_usuario
+            }
+        })
+
+        if (!transacao) 
+        {
+            return res.status(404).json({message: 'Transação não encontrada ou não pertence a este usuário!'})
+        }
+
+        await transacao.destroy()
+
+        return res.status(200).json({message: 'Transação deletada com sucesso!'})
+
+    } catch (error) {
+        return res.status(500).json({message: 'Erro ao deletar transação',error: error.message})
+
+    }
+    }
 }
 
