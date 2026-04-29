@@ -1,3 +1,5 @@
+const { Op } = require('sequelize')
+
 const Transacao = require('../models/Transacao')
 const CategoriaTransacao = require('../models/CategoriaTransacao')
 const User = require('../models/User')
@@ -36,6 +38,12 @@ module.exports = class transacaoController {
 
             if (!data) {
                 return res.status(400).json({ message: 'A data é obrigatória!' })
+            }
+           // CHAT
+            const dataRegex = /^\d{4}-\d{2}-\d{2}$/
+
+            if (!dataRegex.test(data)) {
+                return res.status(400).json({ message: 'A data deve estar no formato YYYY-MM-DD!'})
             }
 
             /* verifica se não veio valor, se veio null ou se veio vazio */
@@ -97,7 +105,7 @@ module.exports = class transacaoController {
     try {
 
         // Pegando filtros opcionais enviados pela URL
-        const { id_categoria, entrada_saida, status } = req.query
+        const { id_categoria, entrada_saida, status, data_inicio, data_fim, page = 1, limit = 5 } = req.query
 
         // Pegando o ID do usuário autenticado
         // Tenta buscar como id ou id_usuario
@@ -133,16 +141,48 @@ module.exports = class transacaoController {
             where.status = status
         }
 
-        // Busca no banco
-        const transacoes = await Transacao.findAll({
-            where
+
+         //  NOVO: filtro por período CHAT
+        // filtro por período
+        if (data_inicio || data_fim) {
+
+         where.data = {}
+
+        if (data_inicio) {
+        where.data[Op.gte] = data_inicio // maior ou igual
+        }
+
+        if (data_fim) {
+        where.data[Op.lte] = data_fim // menor ou igual
+        }
+    }
+
+        //  NOVO: paginação  CHAT
+        const paginaAtual = Number(page)
+        const limitePorPagina = Number(limit)
+        const offset = (paginaAtual - 1) * limitePorPagina
+
+        const { count, rows } = await Transacao.findAndCountAll({
+            where,
+            include: [
+                {
+                    model: CategoriaTransacao,
+                    attributes: ['id_categoria', 'nome'] // 🔥 traz nome da categoria
+                }
+            ],
+            limit: limitePorPagina,
+            offset: offset,
+            order: [['data', 'DESC']]
         })
 
-        // Retorno sucesso
+        // Retorno sucesso CHAT
         return res.status(200).json({
-            message: 'Transações listadas com sucesso!',
-            transacoes
-        })
+        message: 'Transações listadas com sucesso!',
+        totalTransacoes: count,
+        paginaAtual: paginaAtual,
+        totalPaginas: Math.ceil(count / limitePorPagina),
+        transacoes: rows
+})
 
     } catch (error) {
 
