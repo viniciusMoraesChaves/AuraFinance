@@ -5,100 +5,152 @@ const CategoriaTransacao = require('../models/CategoriaTransacao')
 const User = require('../models/User')
 
 module.exports = class transacaoController {
-    static async createTransacao(req, res) {
-        try {
-            const {
-                id_categoria,
-                descricao,
-                status,
-                recorrente,
-                data,
-                valor,
-                entrada_saida
-            } = req.body
+   static async createTransacao(req, res) {
+    try {
+        const {
+            id_categoria,
+            descricao,
+            status,
+            recorrente,
+            data,
+            valor,
+            entrada_saida
+        } = req.body
 
-            const id_usuario = req.user.id
+        const id_usuario = req.user?.id || req.user?.id_usuario
 
-            /* os if vão retornar erro se a pessoa não digitou nada, ou se ela digitou como por ex uma letra inves de um numero na idade */
-            if (!id_usuario) { 
-                return res.status(400).json({ message: 'O id do usuário é obrigatório!' })
-            }
-
-            if (!id_categoria) {
-                return res.status(400).json({ message: 'O id da categoria é obrigatório!' })
-            }
-
-            if (!descricao) {
-                return res.status(400).json({ message: 'A descrição é obrigatória!' })
-            }
-
-            if (!status) {
-                return res.status(400).json({ message: 'O status é obrigatório!' })
-            }
-
-            if (!data) {
-                return res.status(400).json({ message: 'A data é obrigatória!' })
-            }
-           // CHAT
-            const dataRegex = /^\d{4}-\d{2}-\d{2}$/
-
-            if (!dataRegex.test(data)) {
-                return res.status(400).json({ message: 'A data deve estar no formato YYYY-MM-DD!'})
-            }
-
-            /* verifica se não veio valor, se veio null ou se veio vazio */
-            if (valor === undefined || valor === null || valor === '') { 
-                return res.status(400).json({ message: 'O valor é obrigatório!' })
-            }
-
-            if (isNaN(valor)) { /* isNaN = is not a number*/
-                return res.status(400).json({ message: 'O valor deve ser numérico!' })
-            }
-
-            if (entrada_saida === undefined || entrada_saida === null) {
-                return res.status(400).json({ message: 'O campo entrada_saida é obrigatório!' })
-            }
-
-            /* vai verificar se o uuário existe mesmo */
-            const usuarioExiste = await User.findByPk(id_usuario) 
-
-            if (!usuarioExiste) {
-                return res.status(404).json({ message: 'Usuário não encontrado!' })
-            }
-
-            /* Verifica se a categoria existe */
-            const categoriaExiste = await CategoriaTransacao.findByPk(id_categoria) 
-
-            if (!categoriaExiste) {
-                return res.status(404).json({ message: 'Categoria não encontrada!' })
-            }
-
-            /* criação de nova transação */
-            const novaTransacao = await Transacao.create({ 
-                id_usuario,
-                id_categoria,
-                descricao,
-                status,
-                recorrente: recorrente ?? false, /* Se tiver valor vai usar ele e se não for vai usar o false */
-                data,
-                valor,
-                entrada_saida
-            })
-
-            /* Usamos o ?? em vez de || pq o ?? considera o null e undefined e o || considera false, 0, "" e null */
-
-            return res.status(201).json({
-                message: 'Transação criada com sucesso!',
-                transacao: novaTransacao
-            })
-
-        } catch (error) {
-            return res.status(500).json({
-                message: 'Erro ao criar transação',
-                error: error.message
+        if (!id_usuario) {
+            return res.status(401).json({ 
+                message: 'Usuário não autenticado ou token inválido!' 
             })
         }
+
+        if (!id_categoria) {
+            return res.status(400).json({ 
+                message: 'O id da categoria é obrigatório!' 
+            })
+        }
+
+        if (!descricao) {
+            return res.status(400).json({ 
+                message: 'A descrição é obrigatória!' 
+            })
+        }
+
+        if (!status) {
+            return res.status(400).json({ 
+                message: 'O status é obrigatório!' 
+            })
+        }
+
+        const statusNormalizado = status
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+
+        const statusPermitidos = ['pendente', 'concluida', 'cancelada']
+
+        if (!statusPermitidos.includes(statusNormalizado)) {
+            return res.status(400).json({
+                message: 'Status inválido! Use: pendente, concluída ou cancelada.'
+            })
+        }
+
+        let statusFinal
+
+        if (statusNormalizado === 'concluida') {
+            statusFinal = 'concluída'
+        } else {
+            statusFinal = statusNormalizado
+        }
+
+        if (!data) {
+            return res.status(400).json({ 
+                message: 'A data é obrigatória!' 
+            })
+        }
+
+        const dataRegex = /^\d{4}-\d{2}-\d{2}$/
+
+        if (!dataRegex.test(data)) {
+            return res.status(400).json({ 
+                message: 'A data deve estar no formato YYYY-MM-DD!' 
+            })
+        }
+
+        if (valor === undefined || valor === null || valor === '') {
+            return res.status(400).json({ 
+                message: 'O valor é obrigatório!' 
+            })
+        }
+
+        if (isNaN(valor)) {
+            return res.status(400).json({ 
+                message: 'O valor deve ser numérico!' 
+            })
+        }
+
+        if (entrada_saida === undefined || entrada_saida === null || entrada_saida === '') {
+            return res.status(400).json({ 
+                message: 'O campo entrada_saida é obrigatório!' 
+            })
+        }
+
+        let entradaSaidaNormalizado
+
+        if (entrada_saida === true || entrada_saida === 'true') {
+            entradaSaidaNormalizado = 1
+        } else if (entrada_saida === false || entrada_saida === 'false') {
+            entradaSaidaNormalizado = 0
+        } else {
+            entradaSaidaNormalizado = Number(entrada_saida)
+        }
+
+        if (![0, 1].includes(entradaSaidaNormalizado)) {
+            return res.status(400).json({
+                message: 'O campo entrada_saida deve ser 0/1 ou true/false!'
+            })
+        }
+
+        const usuarioExiste = await User.findByPk(id_usuario)
+
+        if (!usuarioExiste) {
+            return res.status(404).json({ 
+                message: 'Usuário não encontrado!' 
+            })
+        }
+
+        const categoriaExiste = await CategoriaTransacao.findByPk(id_categoria)
+
+        if (!categoriaExiste) {
+            return res.status(404).json({ 
+                message: 'Categoria não encontrada!' 
+            })
+        }
+
+        const novaTransacao = await Transacao.create({
+            id_usuario,
+            id_categoria,
+            descricao,
+            status: statusFinal,
+            recorrente: recorrente ?? false,
+            data,
+            valor,
+            entrada_saida: entradaSaidaNormalizado
+        })
+
+        return res.status(201).json({
+            message: 'Transação criada com sucesso!',
+            transacao: novaTransacao
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            message: 'Erro ao criar transação',
+            error: error.message
+        })
     }
+}
 
 
    static async listTransacao(req, res) {
@@ -157,7 +209,7 @@ module.exports = class transacaoController {
         }
     }
 
-        //  NOVO: paginação  CHAT
+        //  essa paginacao é para que na tela de transacoes apareca de 5 em 5 as transacoes, assim fica exatamente o que o front mostra
         const paginaAtual = Number(page)
         const limitePorPagina = Number(limit)
         const offset = (paginaAtual - 1) * limitePorPagina
@@ -167,7 +219,7 @@ module.exports = class transacaoController {
             include: [
                 {
                     model: CategoriaTransacao,
-                    attributes: ['id_categoria', 'nome'] // 🔥 traz nome da categoria
+                    attributes: ['id_categoria', 'nome'] // traz nome da categoria
                 }
             ],
             limit: limitePorPagina,
@@ -175,7 +227,7 @@ module.exports = class transacaoController {
             order: [['data', 'DESC']]
         })
 
-        // Retorno sucesso CHAT
+        
         return res.status(200).json({
         message: 'Transações listadas com sucesso!',
         totalTransacoes: count,
@@ -261,7 +313,28 @@ static async editTransacao(req, res) {
                 })
             }
 
-            transacao.status = status
+            const statusNormalizado = status
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+
+            const statusPermitidos = ['pendente', 'concluida', 'cancelada']
+
+            if (!statusPermitidos.includes(statusNormalizado)) {
+                return res.status(400).json({
+                    message: 'Status inválido! Use: pendente, concluída ou cancelada.'
+                })
+            }
+
+            let statusFinal
+
+            if (statusNormalizado === 'concluida') {
+                statusFinal = 'concluída'
+            } else {
+                statusFinal = statusNormalizado
+            }
+
+            transacao.status = statusFinal
         }
 
         if (recorrente !== undefined) { /* pode ser verdadeiro ou falso */
@@ -310,7 +383,23 @@ static async editTransacao(req, res) {
                 })
             }
 
-            transacao.entrada_saida = entrada_saida
+            let entradaSaidaNormalizado
+
+            if (entrada_saida === true || entrada_saida === 'true') {
+                entradaSaidaNormalizado = 1
+            } else if (entrada_saida === false || entrada_saida === 'false') {
+                entradaSaidaNormalizado = 0
+            } else {
+                entradaSaidaNormalizado = Number(entrada_saida)
+            }
+
+            if (![0, 1].includes(entradaSaidaNormalizado)) {
+                return res.status(400).json({
+                    message: 'O campo entrada_saida deve ser 0/1 ou true/false!'
+                })
+            }
+
+            transacao.entrada_saida = entradaSaidaNormalizado
         }
 
         await transacao.save()  /* salva as alterações */
@@ -354,5 +443,115 @@ static async editTransacao(req, res) {
 
     }
     }
+
+    static async listCategorias(req, res) {
+    
+    try 
+    {
+        const categorias = await CategoriaTransacao.findAll({order: [['nome', 'ASC']]})
+        return res.status(200).json({message: 'Categorias listadas com sucesso!',categorias})
+   
+    } catch (error) {
+        return res.status(500).json({message: 'Erro ao listar categorias',error: error.message})
+    }
+
+    }
+
+    // resumo financeiro transacao (total de entradas, total de saidas, saldo total)
+    static async resumoTransacao(req,res) {
+
+        try 
+        {
+            const id_usuario = req.user?.id || req.user?.id_usuario
+
+        if (!id_usuario) 
+        {
+            return res.status(401).json({message: 'Usuário não autenticado!'})
+        }
+
+        const transacoes = await Transacao.findAll({where: {id_usuario}})
+
+        let totEntrada = 0
+        let totSaida = 0
+
+        transacoes.forEach(transacao => {
+             const valor = Number(transacao.valor)
+
+            if (transacao.entrada_saida === true || transacao.entrada_saida === 1) {
+                totEntrada += valor
+            } else {
+                totSaida += valor
+            }
+        })
+
+         const saldoLiquido = totEntrada - totSaida
+
+        return res.status(200).json({saldoLiquido,totEntrada,totSaida})
+
+    } catch(error)
+    {
+        return res.status(500).json({message: 'Erro ao gerar resumo financeiro',error: error.message})
+    }
 }
 
+    static async gastoCategoria(req,res) {
+
+        try {
+
+            const id_usuario = req.user?.id || req.user?.id_usuario
+
+            if (!id_usuario) 
+            {  
+                return res.status(401).json({message: 'Usuário não autenticado!'})
+            }
+
+            const transacoes = await Transacao.findAll({
+            where: {
+                id_usuario,
+                entrada_saida: 0
+            },
+            include: [{
+                model: CategoriaTransacao,
+                attributes: ['nome']
+            }]
+        })
+
+        const gastos = {}
+        let totalSaidas = 0
+
+        transacoes.forEach(t => {
+            const nome = t.CategoriaTransacao.nome
+            const valor = Number(t.valor)
+
+            totalSaidas += valor
+
+            if (!gastos[nome]) {
+                gastos[nome] = 0
+            }
+
+            gastos[nome] += valor
+        })
+
+        const resultado = Object.keys(gastos).map(nome => {
+            const valor = gastos[nome]
+
+            return {
+                categoria: nome,
+                valor,
+                porcentagem: ((valor / totalSaidas) * 100).toFixed(1)
+            }
+        })
+
+        return res.status(200).json({
+            totalSaidas,
+            gastosPorCategoria: resultado
+        })
+
+        } catch(error)
+        {
+            return res.status(500).json({message: 'Erro ao gerar gasto por categoria',error: error.message})
+        }
+    }
+
+
+}
