@@ -3,11 +3,9 @@ import { useState } from "react";
 
 import Sidebar from "../components/sidebar";
 import TopBar from "../components/topBar";
-import ObjectivesKPIs from "../components/ObjectivesKPIs";
-import { ObjectivesEvolution } from "../components/ObjectivesEvolution";
-import { ObjectivesDistribuitionByCategory } from "../components/ObjectivesDistribuitionByCategory";
-import ObjectivesList from "../components/ObjectivesList";
-import NewObjectiveModal from "../components/NewObjectiveModal";
+import SavingsTotalCard from "../components/SavingsTotalCard";
+import SavingsChart from "../components/SavingsChart";
+import SavingsList from "../components/SavingsList";
 
 function Savings() {
   const location = useLocation();
@@ -73,23 +71,24 @@ function Savings() {
             </p>
           </div>
 
-          <ObjectivesKPIs />
+          <SavingsTotalCard 
+            total={10000} 
+            monthlyChange={3.2} 
+            monthlyProfit={500} 
+            yearlyProfit={6000} 
+            monthlyReturn={1.85} 
+          />
 
-          <div style={{display: "flex", gap: "16px", marginTop: "24px"}}>
-            <div style={{flex: 2}}>
-              <ObjectivesEvolution />
-            </div>
-            <div style={{flex: 1}}>
-              <ObjectivesDistribuitionByCategory />
-            </div>
+          <div style={{ gap: "16px", marginTop: "24px"}}>
+              <SavingsChart />
           </div>
 
           <div style={{marginTop: "24px"}}>
-            <ObjectivesList />
+            <SavingsList />
           </div>
         </div>
       </div>
-      {openModal && <NewObjectiveModal onClose={() => setOpenModal(false)} />}
+      
     </div>
   );
 }
