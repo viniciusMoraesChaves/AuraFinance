@@ -104,9 +104,47 @@ module.exports = class objetivoController {
                 order: [['id_objetivo', 'DESC']]
             })
 
+            const objetivosComCalculo = objetivos.map(obj => {
+
+            /* converte os valores para numero */
+            const valor_meta = Number(obj.valor_meta)
+            const valor_atual = Number(obj.valor_atual)
+
+            /* ja coloquei que só pode chegar a 100% */
+            const progresso = valor_meta > 0 /* verifica se a meta é maior que 0 */
+                ? Number(Math.min(((valor_atual / valor_meta) * 100), 100).toFixed(2)) /* se for maior que 0 ele calcula a porcentagem  */
+                : 0 /* se for invalido ou a meta for 0, o progesso vira 0 */
+
+            /* evita que a conta de negativo com o math.max */
+            const faltante = Math.max(valor_meta - valor_atual, 0) /* calcula quanto falta para o progresso */
+
+            let contribuicao_mensal = null
+
+            if (obj.data_limite && faltante > 0) { /* verificamos se tem data limite */
+
+                const hoje = new Date() /* pega a data atual */
+                const dataLimite = new Date(obj.data_limite) /* pega a data limite */
+
+                /* calcula os meses restantes */
+                const meses = (dataLimite.getFullYear() - hoje.getFullYear()) * 12 + (dataLimite.getMonth() - hoje.getMonth())
+
+                 if (meses > 0) {
+                    contribuicao_mensal = Number((faltante / meses).toFixed(2)) /* mostra a contribuição do mes */
+                }
+            }
+
+            return {
+                ...obj.dataValues, /* essa parte copia todos os dados originais do objetivo que vem do banco de dados */
+                progresso: Number(progresso), /* a parte de progresso é convertido para numero */
+                faltante,
+                contribuicao_mensal: contribuicao_mensal ?? 0,
+                concluido: valor_atual >= valor_meta
+            }
+        })
+
             return res.status(200).json({
                 message: 'Objetivos listados com sucesso!',
-                objetivos
+                objetivos: objetivosComCalculo
             })
 
         } catch (error) {
@@ -219,6 +257,96 @@ module.exports = class objetivoController {
     } catch (error) {
         return res.status(500).json({
             message: 'Erro ao editar objetivo',
+            error: error.message
+        })
+    }
+}
+    /* deletar o objeto */
+    static async deleteObjetivo(req, res) {
+        try {
+            const { id } = req.params
+
+            const id_usuario = req.user?.id || req.user?.id_usuario
+
+            const objetivo = await Objetivo.findOne({
+            where: {
+                id_objetivo: id,
+                id_usuario: id_usuario
+            }
+        })
+
+        if (!objetivo) {
+            return res.status(404).json({
+                message: 'Objetivo não encontrado!'
+            })
+        }
+
+        await objetivo.destroy()
+
+        return res.status(200).json({
+            message: 'Objetivo deletado com sucesso!'
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            message: 'Erro ao deletar objetivo',
+            error: error.message
+        })
+    }
+}
+
+/* adicionar valor ao objetivo */
+    static async addValorObjetivo(req, res) {   /* parte de simular valor */
+        try {
+            const { id } = req.params
+            const { valor } = req.body
+
+            const id_usuario = req.user?.id || req.user?.id_usuario
+
+        if (!id_usuario) {
+            return res.status(401).json({
+                message: 'Usuário não autenticado ou token inválido!'
+            })
+        }
+
+        if (valor === undefined || valor === null || valor === '') {
+            return res.status(400).json({
+                message: 'O valor é obrigatório!'
+            })
+        }
+
+        if (isNaN(valor)) {
+            return res.status(400).json({
+                message: 'O valor deve ser numérico!'
+            })
+        }
+
+        const objetivo = await Objetivo.findOne({
+            where: {
+                id_objetivo: id,
+                id_usuario: id_usuario
+            }
+        })
+
+        if (!objetivo) {
+            return res.status(404).json({
+                message: 'Objetivo não encontrado!'
+            })
+        }
+
+        /* adiciona um valor ao objetivo, cada vez que o usuário inserir o valor ele é acumulado no valor final */
+        objetivo.valor_atual = Number(objetivo.valor_atual) + Number(valor) 
+
+        await objetivo.save()
+
+        return res.status(200).json({
+            message: 'Valor adicionado com sucesso!',
+            objetivo
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            message: 'Erro ao adicionar valor',
             error: error.message
         })
     }
