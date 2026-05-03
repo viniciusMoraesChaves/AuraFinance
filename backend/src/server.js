@@ -11,3 +11,7 @@ app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
   
 });
+
+const sequelize = require('./db/conn')
+
+sequelize.sync()

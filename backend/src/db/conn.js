@@ -1,17 +1,17 @@
-const { Sequelize } = require ('sequelize') //sequelize minúsculo = conexão (instância)
+const { Sequelize } = require('sequelize')
 
-const sequelize = new Sequelize ('aurafinance', 'root', '', { //Sequelize maiúsculo = classe
-    host:'localhost',
-    dialect: 'mysql',
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: 'mysql',
+  logging: false,
 })
 
 async function testConnection() {
-try {
-     await sequelize.authenticate()
-    console.log('Conectamos com sucesso!')
-}catch(err){
-    console.log(`não foi possivel se conectar: ${err}`)
-}
+  try {
+    await sequelize.authenticate()
+    console.log('Conectado ao banco com sucesso!')
+  } catch (err) {
+    console.error('Erro ao conectar:', err)
+  }
 }
 
 testConnection()
