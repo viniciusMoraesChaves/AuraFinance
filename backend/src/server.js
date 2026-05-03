@@ -5,13 +5,19 @@ require('./models/associations') // ajuste o nome se seu arquivo tiver outro nom
 
 const app = require("./app");
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-  
-});
 
-const sequelize = require('./db/conn')
+conn.sync()
+  .then(() => {
+    console.log(' Tabelas sincronizadas')
 
-sequelize.sync()
+    app.listen(PORT, () => {
+      console.log(`Servidor rodando na porta ${PORT}`);
+    });
+
+  })
+  .catch((err) => {
+    console.error(' Erro ao sincronizar tabelas:', err)
+  })
+
